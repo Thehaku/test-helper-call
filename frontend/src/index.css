@@ -2,33 +2,72 @@
 @tailwind components;
 @tailwind utilities;
 
-.str-chat__channel {
+/* LiveKit Theme Overrides */
+[data-lk-theme="default"] {
+  --lk-bg: hsl(var(--b1, 0 0% 100%));
+  --lk-bg2: hsl(var(--b2, 0 0% 96%));
+  --lk-fg: hsl(var(--bc, 0 0% 20%));
+}
+
+/* Chat container styles */
+.lk-chat {
+  background: hsl(var(--b1, 0 0% 100%));
+  height: 100%;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(to bottom, #c9e8c9, #b7e7bb);
+  flex-direction: column;
+}
+
+.lk-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.lk-chat-form {
+  border-top: 1px solid hsl(var(--b3, 0 0% 90%));
+  padding: 0.75rem;
+}
+
+.lk-chat-form-input {
+  background: hsl(var(--b2, 0 0% 96%));
+  border: 1px solid hsl(var(--b3, 0 0% 90%));
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  width: 100%;
+}
+
+.lk-chat-form-button {
+  background: hsl(var(--p, 259 94% 51%));
+  color: hsl(var(--pc, 0 0% 100%));
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+}
+
+/* Video conference styles */
+.lk-video-conference {
   height: 100%;
 }
 
-.str-chat__container {
-  max-width: 1200px;
-  width: 100%;
-  height: 80% !important;
-  margin: 0 auto !important;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  overflow: hidden;
+.lk-control-bar {
+  background: hsl(var(--b2, 0 0% 20%));
+  border-top: 1px solid hsl(var(--b3, 0 0% 30%));
 }
 
-.str-chat__list {
-  background-color: #ffffff;
-  padding: 12px;
+/* Custom message styling */
+.lk-message {
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+  margin-bottom: 0.5rem;
+  max-width: 80%;
 }
 
-.str-chat__list-notifications {
-  display: none;
+.lk-message-mine {
+  background: hsl(var(--p, 259 94% 51%));
+  color: white;
+  margin-left: auto;
 }
 
-.str-chat__message-input {
-  border-top: 1px solid #ddd;
+.lk-message-other {
+  background: hsl(var(--b2, 0 0% 96%));
+  color: hsl(var(--bc, 0 0% 20%));
 }

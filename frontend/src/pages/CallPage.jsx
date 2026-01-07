@@ -2,111 +2,80 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import useAuthUser from "../hooks/useAuthUser";
 import { useQuery } from "@tanstack/react-query";
-import { getStreamToken } from "../lib/api";
+import { getRoomToken } from "../lib/api";
 
 import {
-  StreamVideo,
-  StreamVideoClient,
-  StreamCall,
-  CallControls,
-  SpeakerLayout,
-  StreamTheme,
-  CallingState,
-  useCallStateHooks,
-} from "@stream-io/video-react-sdk";
+  LiveKitRoom,
+  VideoConference,
+  RoomAudioRenderer,
+} from "@livekit/components-react";
+import "@livekit/components-styles";
 
-import "@stream-io/video-react-sdk/dist/css/styles.css";
 import toast from "react-hot-toast";
 import PageLoader from "../components/PageLoader";
 
-const STREAM_API_KEY = import.meta.env.VITE_STREAM_API_KEY;
+const LIVEKIT_URL = import.meta.env.VITE_LIVEKIT_URL;
 
 const CallPage = () => {
   const { id: callId } = useParams();
-  const [client, setClient] = useState(null);
-  const [call, setCall] = useState(null);
-  const [isConnecting, setIsConnecting] = useState(true);
+  const navigate = useNavigate();
+  const [token, setToken] = useState(null);
 
   const { authUser, isLoading } = useAuthUser();
 
-  const { data: tokenData } = useQuery({
-    queryKey: ["streamToken"],
-    queryFn: getStreamToken,
-    enabled: !!authUser,
+  const { data: tokenData, isLoading: tokenLoading } = useQuery({
+    queryKey: ["roomToken", callId],
+    queryFn: () => getRoomToken(callId),
+    enabled: !!authUser && !!callId,
   });
 
   useEffect(() => {
-    const initCall = async () => {
-      if (!tokenData.token || !authUser || !callId) return;
+    if (tokenData?.token) {
+      setToken(tokenData.token);
+    }
+  }, [tokenData]);
 
-      try {
-        console.log("Initializing Stream video client...");
+  const handleDisconnected = () => {
+    toast.success("Call ended");
+    navigate("/");
+  };
 
-        const user = {
-          id: authUser._id,
-          name: authUser.fullName,
-          image: authUser.profilePic,
-        };
+  const handleError = (error) => {
+    console.error("LiveKit error:", error);
+    toast.error("Could not connect to the call. Please try again.");
+  };
 
-        const videoClient = new StreamVideoClient({
-          apiKey: STREAM_API_KEY,
-          user,
-          token: tokenData.token,
-        });
+  if (isLoading || tokenLoading || !token) {
+    return <PageLoader />;
+  }
 
-        const callInstance = videoClient.call("default", callId);
-
-        await callInstance.join({ create: true });
-
-        console.log("Joined call successfully");
-
-        setClient(videoClient);
-        setCall(callInstance);
-      } catch (error) {
-        console.error("Error joining call:", error);
-        toast.error("Could not join the call. Please try again.");
-      } finally {
-        setIsConnecting(false);
-      }
-    };
-
-    initCall();
-  }, [tokenData, authUser, callId]);
-
-  if (isLoading || isConnecting) return <PageLoader />;
-
-  return (
-    <div className="h-screen flex flex-col items-center justify-center">
-      <div className="relative">
-        {client && call ? (
-          <StreamVideo client={client}>
-            <StreamCall call={call}>
-              <CallContent />
-            </StreamCall>
-          </StreamVideo>
-        ) : (
-          <div className="flex items-center justify-center h-full">
-            <p>Could not initialize call. Please refresh or try again later.</p>
-          </div>
-        )}
+  if (!LIVEKIT_URL) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="alert alert-error max-w-md">
+          <span>Missing VITE_LIVEKIT_URL in frontend .env file</span>
+        </div>
       </div>
-    </div>
-  );
-};
-
-const CallContent = () => {
-  const { useCallCallingState } = useCallStateHooks();
-  const callingState = useCallCallingState();
-
-  const navigate = useNavigate();
-
-  if (callingState === CallingState.LEFT) return navigate("/");
+    );
+  }
 
   return (
-    <StreamTheme>
-      <SpeakerLayout />
-      <CallControls />
-    </StreamTheme>
+    <div className="h-screen">
+      <LiveKitRoom
+        serverUrl={LIVEKIT_URL}
+        token={token}
+        connect={true}
+        audio={true}
+        video={true}
+        onDisconnected={handleDisconnected}
+        onError={handleError}
+        data-lk-theme="default"
+        style={{ height: "100vh" }}
+      >
+        <VideoConference />
+        <RoomAudioRenderer />
+      </LiveKitRoom>
+    </div>
   );
 };
 

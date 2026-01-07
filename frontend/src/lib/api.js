@@ -59,7 +59,13 @@ export async function acceptFriendRequest(requestId) {
   return response.data;
 }
 
-export async function getStreamToken() {
+// LiveKit token endpoints
+export async function getLiveKitToken() {
   const response = await axiosInstance.get("/chat/token");
+  return response.data;
+}
+
+export async function getRoomToken(roomId) {
+  const response = await axiosInstance.get(`/chat/token/${roomId}`);
   return response.data;
 }
